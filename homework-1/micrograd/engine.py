@@ -27,11 +27,11 @@ class Value:
 
     def __mul__(self, other: Union[int, float, "Value"]) -> "Value":
         other = other if isinstance(other, Value) else Value(other)
-        out = ...
+        out = Value(self.data * other.data, (self, other), "*")
 
         def _backward():
-            self.grad += ...
-            other.grad += ...
+            self.grad += out.grad * other.data
+            other.grad += out.grad * self.data
 
         out._backward = _backward
 
@@ -41,29 +41,29 @@ class Value:
         assert isinstance(
             other, (int, float)
         ), "only supporting int/float powers for now"
-        out = ...
+        out = Value(self.data ** other, (self, ), f"**{other}")
 
         def _backward():
-            self.grad += ...
+            self.grad += out.grad * (other * self.data ** (other - 1))
 
         out._backward = _backward
 
         return out
 
     def exp(self):
-        out = ...
+        out = Value(np.exp(self.data), (self, ), "exp")
 
         def _backward():
-            self.grad += ...
+            self.grad += out.grad * np.exp(self.data)
 
         out._backward = _backward
         return out
 
     def relu(self):
-        out = ...
+        out = Value(np.max(self.data, 0), (self, ), "ReLU")
 
         def _backward():
-            self.grad += ...
+            self.grad += out.grad * (out.data > 0)
 
         out._backward = _backward
 
@@ -88,6 +88,7 @@ class Value:
         self.grad = 1
         for v in reversed(topo):
             # YOUR CODE GOES HERE
+            self.grad = self.grad * v.grad()
 
     def __neg__(self):  # -self
         return self * -1
@@ -146,39 +147,39 @@ class Tensor:
         return Tensor(self.data + other)
 
     def __mul__(self, other):
-        return ...
+        return Tensor(self.data * other)
     
     def __truediv__(self, other):
-        return ...
+        return Tensor(self.data / other)
     
     def __floordiv__(self, other):
-        return ...
+        return Tensor(self.data // other)
     
     def __radd__(self, other):
-        return ...
+        return self + other
     
-    def __rmull__(self, other):
-        return ...
+    def __rmul__(self, other):
+        return self * other
 
     def exp(self):
-        return ...
+        return Tensor(np.exp(self.data))
 
     def dot(self, other):
         if isinstance(other, Tensor):
-            return ...
-        return ...
+            return Tensor(self.data @ other.data)
+        return self * other
 
     def shape(self):
         return self.data.shape
 
     def argmax(self, dim=None):
-        return ...
+        return np.argmax(self.data)
 
     def max(self, dim=None):
-        return ...
+        return np.max(self.data)
 
     def reshape(self, *args, **kwargs):
-        self.data = ...
+        self.data = self.data.reshape(*args, **kwargs)
         return self
 
     def backward(self):
