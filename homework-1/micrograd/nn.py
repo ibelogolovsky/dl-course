@@ -24,24 +24,28 @@ class Linear(Module):
     def __init__(self, in_features, out_features, bias: bool = True):
         """Initializing model"""
         # Create Linear Module
+        stdv = 1 / np.sqrt(in_features)
+        self.w = Tensor([Value(np.random.uniform(-stdv, stdv, size=(in_features,out_features)))])
+        self.b = Value(0)
+        self.bias = bias
 
     def forward(self, inp):
         """Y = W * x + b"""
-        return ...
+        return self.w.dot(inp) + self.b
 
     def parameters(self):
-        return ...
+        return self.w.parameters + [self.b]
 
 
 class ReLU(Module):
     """The most simple and popular activation function"""
     def forward(self, inp):
         # Create ReLU Module
-        return ...
+        return inp.relu()
 
 
 class CrossEntropyLoss(Module):
     """Cross-entropy loss for multi-class classification"""
     def forward(self, inp, label):
         # Create CrossEntropy Loss Module
-        return ...
+        return -label.dot(np.log(inp))
